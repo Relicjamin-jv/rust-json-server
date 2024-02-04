@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: rust-httpd-service 
+spec:
+  selector:
+    app: rust-httpd
+  type: LoadBalancer 
+  ports:
+  - name: rust-httpd-service-port 
+    protocol: TCP
+    port: 8000
+    targetPort: rust-httpd-svc 
+---
+
