@@ -1,4 +1,5 @@
-#[macro_use] extern crate rocket;
+#[macro_use]
+extern crate rocket;
 use rocket::tokio::time::{sleep, Duration};
 
 #[get("/")]
@@ -14,6 +15,5 @@ async fn delay(seconds: u64) -> String {
 
 #[launch]
 fn rocket() -> rocket::Rocket<rocket::Build> {
-    rocket::build()
-        .mount("/", routes![index, delay])
+    rocket::build().mount("/", routes![index, delay])
 }
