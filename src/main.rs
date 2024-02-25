@@ -1,3 +1,8 @@
+use k8s_openapi::api::core::v1::Pod;
+use kube::{
+    api::{Api, ListParams, ResourceExt},
+    Client,
+};
 use rocket::tokio::time::{sleep, Duration};
 use rocket::{get, serde::json::Json};
 use rocket_okapi::okapi::schemars;
@@ -35,10 +40,34 @@ async fn delay(seconds: u64) -> Json<Message> {
     })
 }
 
+async fn create_kube_client() -> Result<Client, Box<dyn std::error::Error>> {
+    let client = Client::try_default().await?;
+
+    Ok(client)
+}
+
+async fn list_all_pods() -> Result<Json<Message>, Box<dyn std::error::Error>> {
+    let client = create_kube_client().await.unwrap();
+
+    let mut message: String = "".to_owned();
+    let pods: Api<Pod> = Api::default_namespaced(client);
+    for p in pods.list(&ListParams::default()).await? {
+        message.push_str(&*p.name_any())
+    }
+
+    Ok(Json(Message { message }))
+}
+
+#[openapi(tag = "Message")]
+#[get("/pods")]
+async fn get_pods() -> Json<Message> {
+    list_all_pods().await.unwrap()
+}
+
 #[rocket::main]
 async fn main() {
     let launch_result = rocket::build()
-        .mount("/", openapi_get_routes![index, delay])
+        .mount("/", openapi_get_routes![index, delay, get_pods])
         .mount(
             "/swagger-ui/",
             make_swagger_ui(&SwaggerUIConfig {
